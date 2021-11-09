@@ -1,5 +1,5 @@
 {
-  "name": "migrate-mongoose",
+  "name": "@juji/migrate-mongoose",
   "version": "4.0.0",
   "description": "A mongoose based migration framework for node",
   "main": "./src/lib.js",
@@ -24,7 +24,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/balmasi/migrate-mongoose.git"
+    "url": "https://github.com/juji/migrate-mongoose"
   },
   "dependencies": {
     "bluebird": "^3.3.3",
