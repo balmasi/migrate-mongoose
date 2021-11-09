@@ -1,6 +1,6 @@
 {
-  "name": "@juji/migrate-mongoose",
-  "version": "4.0.0",
+  "name": "@juji-migrate-mongoose",
+  "version": "4.0.1",
   "description": "A mongoose based migration framework for node",
   "main": "./src/lib.js",
   "scripts": {
