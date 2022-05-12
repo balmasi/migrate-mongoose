@@ -31,11 +31,11 @@
     "colors": "^1.1.2",
     "dotenv": "^8.0.0",
     "inquirer": "^0.12.0",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^1.0.4",
     "mongoose": "^5.6.3",
-    "yargs": "^4.8.1"
+    "yargs": "^16.1.1"
   },
   "devDependencies": {
-    "np": "^5.0.3"
+    "np": "^7.0.0"
   }
 }

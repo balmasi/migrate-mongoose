@@ -9,7 +9,6 @@ const mongoose = require('mongoose');
 const Promise = require('bluebird');
 
 const MigrationModelFactory = require('./db');
-let MigrationModel;
 
 Promise.config({
   warnings: false
@@ -53,7 +52,7 @@ class Migrator {
     this.collection = collectionName;
     this.autosync = autosync;
     this.cli = cli;
-    MigrationModel = MigrationModelFactory(collectionName, this.connection);
+    this.migrationModel = MigrationModelFactory(collectionName, this.connection);
   }
 
   log(logString, force = false) {
@@ -67,7 +66,7 @@ class Migrator {
    * @param {mongoose.connection} connection - Mongoose connection
    */
   setMongooseConnection(connection) {
-    MigrationModel = MigrationModelFactory(this.collection, connection)
+    this.migrationModel = MigrationModelFactory(this.collection, connection)
     return this
   }
 
@@ -86,7 +85,7 @@ class Migrator {
    */
   async create(migrationName) {
     try {
-      const existingMigration = await MigrationModel.findOne({ name: migrationName });
+      const existingMigration = await this.migrationModel.findOne({ name: migrationName });
       if (!!existingMigration) {
         throw new Error(`There is already a migration with name '${migrationName}' in the database`.red);
       }
@@ -98,7 +97,7 @@ class Migrator {
       fs.writeFileSync(path.join(this.migrationPath, newMigrationFile), this.template);
       // create instance in db
       await this.connection;
-      const migrationCreated = await MigrationModel.create({
+      const migrationCreated = await this.migrationModel.create({
         name: migrationName,
         createdAt: now
       });
@@ -116,7 +115,7 @@ class Migrator {
    * @param migrationName
    * @param direction
    */
-  async run(direction = 'up', migrationName) {
+  async run(direction = 'up', migrationName, ...args) {
     await this.sync();
 
     if (direction !== 'up' && direction !== 'down') {
@@ -124,8 +123,8 @@ class Migrator {
     }
 
     const untilMigration = migrationName ?
-      await MigrationModel.findOne({ name: migrationName }) :
-      await MigrationModel.findOne().sort({ createdAt: direction === 'up' ? -1 : 1 });
+      await this.migrationModel.findOne({ name: migrationName }) :
+      await this.migrationModel.findOne().sort({ createdAt: direction === 'up' ? -1 : 1 });
 
     if (!untilMigration) {
       if (migrationName) throw new ReferenceError("Could not find that migration in the database");
@@ -146,7 +145,7 @@ class Migrator {
 
 
     const sortDirection = direction == 'up' ? 1 : -1;
-    const migrationsToRun = await MigrationModel.find(query)
+    const migrationsToRun = await this.migrationModel.find(query)
       .sort({ createdAt: sortDirection });
 
     if (!migrationsToRun.length) {
@@ -177,7 +176,8 @@ class Migrator {
             function callback(err) {
               if (err) return reject(err);
               resolve();
-            }
+            },
+            ...args
           );
 
           if (callPromise && typeof callPromise.then === 'function') {
@@ -187,7 +187,7 @@ class Migrator {
 
         this.log(`${direction.toUpperCase()}:   `[direction == 'up' ? 'green' : 'red'] + ` ${migration.filename} `);
 
-        await MigrationModel.where({ name: migration.name }).updateMany({ $set: { state: direction } });
+        await this.migrationModel.where({ name: migration.name }).updateMany({ $set: { state: direction } });
         migrationsRan.push(migration.toJSON());
         numMigrationsRan++;
       } catch (err) {
@@ -202,17 +202,20 @@ class Migrator {
   }
 
   /**
+
    * sync file system -> database
    *
    * Imports any migrations that are on the file system but
    * missing in the database into the database
+   * Looks at the file system migrations and imports any migrations that are
+   * on the file system but missing in the database into the database
    *
    * This functionality is opposite of prune()
    */
   async sync() {
     try {
       const filesInMigrationFolder = fs.readdirSync(this.migrationPath);
-      const migrationsInDatabase = await MigrationModel.find({});
+      const migrationsInDatabase = await this.migrationModel.find({});
       // Go over migrations in folder and delete any files not in DB
       const migrationsInFolder = _.filter(filesInMigrationFolder, file => /\d{13,}\-.+.js$/.test(file))
         .map(filename => {
@@ -246,7 +249,7 @@ class Migrator {
           migrationName = migrationToImport.slice(timestampSeparatorIndex + 1, migrationToImport.lastIndexOf('.'));
 
         this.log(`Adding migration ${filePath} into database from file system. State is ` + `DOWN`.red);
-        const createdMigration = await MigrationModel.create({
+        const createdMigration = await this.migrationModel.create({
           name: migrationName,
           createdAt: timestamp
         });
@@ -267,7 +270,7 @@ class Migrator {
   async prune() {
     try {
       const filesInMigrationFolder = fs.readdirSync(this.migrationPath);
-      const migrationsInDatabase = await MigrationModel.find({});
+      const migrationsInDatabase = await this.migrationModel.find({});
       // Go over migrations in folder and delete any files not in DB
       const migrationsInFolder = _.filter(filesInMigrationFolder, file => /\d{13,}\-.+.js/.test(file))
         .map(filename => {
@@ -298,14 +301,14 @@ class Migrator {
         migrationsToDelete = answers.migrationsToDelete;
       }
 
-      const migrationsToDeleteDocs = await MigrationModel
+      const migrationsToDeleteDocs = await this.migrationModel
         .find({
           name: { $in: migrationsToDelete }
         }).lean();
 
       if (migrationsToDelete.length) {
         this.log(`Removing migration(s) `, `${migrationsToDelete.join(', ')}`.cyan, ` from database`);
-        await MigrationModel.deleteMany({
+        await this.migrationModel.deleteMany({
           name: { $in: migrationsToDelete }
         });
       }
@@ -328,7 +331,7 @@ class Migrator {
    */
   async list() {
     await this.sync();
-    const migrations = await MigrationModel.find().sort({ createdAt: 1 });
+    const migrations = await this.migrationModel.find().sort({ createdAt: 1 });
     if (!migrations.length) this.log('There are no migrations to list.'.yellow);
     return migrations.map((m) => {
       this.log(
