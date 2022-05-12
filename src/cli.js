@@ -114,6 +114,7 @@ let migrator = new Migrator({
   migrationsPath: path.resolve(args['migrations-dir']),
   templatePath: args['template-file'],
   dbConnectionUri: args.dbConnectionUri,
+  connectionOptions: args.connectionOptions, // juji's addition
   collectionName: args.collection,
   autosync: args.autosync,
   cli: true
@@ -165,7 +166,7 @@ switch (command) {
 promise
   .then(() => { process.exit(0); })
   .catch((err) => {
-    console.error(err)
+    console.error(err) // juji's addition
     console.warn(err.message.yellow);
     process.exit(1);
   });

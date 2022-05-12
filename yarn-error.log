@@ -1,0 +1,76 @@
+Arguments: 
+  /usr/local/Cellar/node@14/14.19.1/bin/node /usr/local/Cellar/yarn/1.22.18/libexec/bin/yarn.js publish
+
+PATH: 
+  /Users/juji/.platformsh/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
+
+Yarn version: 
+  1.22.18
+
+Node version: 
+  14.19.1
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: canceled
+      at Interface.<anonymous> (/usr/local/Cellar/yarn/1.22.18/libexec/lib/cli.js:137143:13)
+      at Interface.emit (events.js:400:28)
+      at Interface._ttyWrite (readline.js:1001:16)
+      at ReadStream.onkeypress (readline.js:265:10)
+      at ReadStream.emit (events.js:400:28)
+      at emitKeys (internal/readline/utils.js:358:14)
+      at emitKeys.next (<anonymous>)
+      at ReadStream.onData (readline.js:1270:36)
+      at ReadStream.emit (events.js:400:28)
+      at addChunk (internal/streams/readable.js:293:12)
+
+npm manifest: 
+  {
+    "name": "juji-migrate-mongoose",
+    "version": "4.0.2",
+    "description": "A mongoose based migration framework for node",
+    "main": "./src/lib.js",
+    "scripts": {
+      "prepublish": "scripts/prepublish.sh",
+      "release": "np --no-tests",
+      "test": "echo 'Error: no test specified'"
+    },
+    "bin": {
+      "migrate": "./src/cli.js"
+    },
+    "keywords": [
+      "migrate",
+      "migration",
+      "mongoose",
+      "schema",
+      "mongodb",
+      "db",
+      "nosql"
+    ],
+    "author": "Borna Almasi <borna@borna-almasi.com>",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/juji/migrate-mongoose"
+    },
+    "dependencies": {
+      "bluebird": "^3.3.3",
+      "colors": "^1.1.2",
+      "dotenv": "^8.0.0",
+      "inquirer": "^0.12.0",
+      "mkdirp": "^0.5.1",
+      "mongoose": "^5.6.3",
+      "yargs": "^4.8.1"
+    },
+    "devDependencies": {
+      "np": "^5.0.3"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
