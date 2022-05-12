@@ -36,6 +36,7 @@ class Migrator {
     templatePath,
     migrationsPath = './migrations',
     dbConnectionUri,
+    connectionOptions,
     collectionName = 'migrations',
     autosync = false,
     cli = false,
@@ -44,7 +45,10 @@ class Migrator {
     const defaultTemplate = migrationTemplate;
     this.template = templatePath ? fs.readFileSync(templatePath, 'utf-8') : defaultTemplate;
     this.migrationPath = path.resolve(migrationsPath);
-    this.connection = connection || mongoose.createConnection(dbConnectionUri, { useNewUrlParser: true });
+    this.connection = connection || mongoose.createConnection(
+      dbConnectionUri,
+      connectionOptions || { useNewUrlParser: true } // juji's addition
+    );
     this.collection = collectionName;
     this.autosync = autosync;
     this.cli = cli;
@@ -198,6 +202,11 @@ class Migrator {
   }
 
   /**
+
+   * sync file system -> database
+   *
+   * Imports any migrations that are on the file system but
+   * missing in the database into the database
    * Looks at the file system migrations and imports any migrations that are
    * on the file system but missing in the database into the database
    *
@@ -253,6 +262,8 @@ class Migrator {
   }
 
   /**
+   * sync migration database -> file system
+   *
    * Opposite of sync().
    * Removes files in migration directory which don't exist in database.
    */

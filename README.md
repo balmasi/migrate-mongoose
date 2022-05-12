@@ -3,7 +3,12 @@ A node based migration framework for ES6+ for mongoose
 
 #### Motivation
 migrate-mongoose is a migration framework for projects which are already using mongoose.
- 
+
+#### Update by juji
+
+- add `connectionOptions` in config
+- log full error
+
 
 **Most other migration frameworks:**
 - Use a local state file to keep track of which migrations have been run: This is a problem for PaS providers like heroku where the file system is wiped each time you deploy
@@ -12,13 +17,13 @@ migrate-mongoose is a migration framework for projects which are already using m
 
 **migrate-mongoose:**
 - Stores migration state in MongoDB
-- Provides plenty of features such as 
+- Provides plenty of features such as
     - Access to mongoose models in migrations
     - Use of promises or standard callbacks
     - custom config files or env variables for migration options
     - ability to delete unused migrations
-- Relies on a simple *GLOBAL* state of whether or not each migration has been called 
-    
+- Relies on a simple *GLOBAL* state of whether or not each migration has been called
+
 
 
 ### Getting Started with the CLI
@@ -58,8 +63,8 @@ Commands:
   prune                    Allows you to delete extraneous migrations by
                            removing extraneous local migration files/database
                            migrations.
- 
- 
+
+
 Options:
   -d, --dbConnectionUri   The URI of the database connection                           [string] [required]
   --collection            The mongo collection name to use for migrations [string] [default: "migrations"]
@@ -70,8 +75,8 @@ Options:
                           rather than asking interactively (use in scripts)
   -h, --help              Show help                                                              [boolean]
 
- 
- 
+
+
 Examples:
   node_modules/.bin/migrate list -d mongodb://localhost/migrations
   node_modules/.bin/migrate create add_users -d mongodb://localhost/migrations
@@ -101,7 +106,7 @@ MIGRATE_dbConnectionUri=mongodb://localhost:27017/mydb
 ```bash
 # If you have migrate.json in the directory, you don't need to do anything
 migrate list
- 
+
 # Otherwise you can provide a config file
 migrate list --config somePath/myCustomConfigFile[.json]
 ```
@@ -124,22 +129,22 @@ Here's an example of a migration created using `migrate create some-migration-na
 /**
  * Easy flow control
  */
-// Notice no need for callback 
+// Notice no need for callback
 async function up() {
   // Error handling is as easy as throwing an error  
   if (condition) {
     throw new Error('This is an error. Could not complete migration');  
   }
-  
+
   // You can just run your updates and when function finishes the migration is assumed to be done!
   await new Promise((resolve, reject) => {
     setTimeout(()=> { resolve('ok'); }, 3000);
   });
-  
+
   // ========  OR ===========
-  // just return the promise! It will succeed when it resolves or fail when rejected 
+  // just return the promise! It will succeed when it resolves or fail when rejected
   return lib.getPromise();
-  
+
 }
 
 module.exports = { up, down };
@@ -185,7 +190,7 @@ import { User } from '../models'
 async function up() {
   // Then you can use it in the migration like so  
   await User.create({ firstName: 'Ada', lastName: 'Lovelace' });
-  
+
   // OR do something such as
   const users = await User.find();
   /* Do something with users */
@@ -197,7 +202,7 @@ If you're using the package programmatically. You can access your models using t
 ```javascript
 async function up() {
   // "this('user')"  is the same as calling "connection.model('user')" using the connection you passed to the Migrator constructor.
-  // 
+  //
   await this('user').create({ firstName: 'Ada', lastName: 'Lovelace' });
 }
 ```
@@ -206,7 +211,7 @@ async function up() {
 
 Currently, the **-d**/**dbConnectionUri**  must include the database to use for migrations in the uri.
 
-example: `-d mongodb://localhost:27017/development` . 
+example: `-d mongodb://localhost:27017/development` .
 
 If you don't want to pass it in every time feel free to use the `migrate.json` config file or an environment variable
 
