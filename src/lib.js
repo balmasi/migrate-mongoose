@@ -6,13 +6,8 @@ const _ = require('lodash');
 const ask = require('inquirer');
 const mkdirp = require('mkdirp');
 const mongoose = require('mongoose');
-const Promise = require('bluebird');
 
 const MigrationModelFactory = require('./db');
-
-Promise.config({
-  warnings: false
-});
 
 const migrationTemplate =`/**
  * Make any changes you need to make to the database here
@@ -44,7 +39,10 @@ class Migrator {
     const defaultTemplate = migrationTemplate;
     this.template = templatePath ? fs.readFileSync(templatePath, 'utf-8') : defaultTemplate;
     this.migrationPath = path.resolve(migrationsPath);
-    this.connection = connection || mongoose.createConnection(dbConnectionUri, { useNewUrlParser: true });
+    this.connection = connection || mongoose.createConnection(dbConnectionUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     this.collection = collectionName;
     this.autosync = autosync;
     this.cli = cli;
@@ -70,8 +68,10 @@ class Migrator {
    * Close the underlying connection to mongo
    * @returns {Promise} A promise that resolves when connection is closed
    */
-  close() {
-    return this.connection ? this.connection.close() : Promise.resolve();
+  async close() {
+    if (this.connection) {
+      await this.connection.close();
+    }
   }
 
   /**
@@ -165,21 +165,10 @@ class Migrator {
         throw new Error(`The "${direction}" export is not defined in ${migration.filename}.`.red);
       }
 
-      try {
-        await new Promise((resolve, reject) => {
-          const callPromise = migrationFunctions[direction].call(
-            this.connection.model.bind(this.connection),
-            function callback(err) {
-              if (err) return reject(err);
-              resolve();
-            },
-            ...args
-          );
+      const callPromise = migrationFunctions[direction].bind(this);
 
-          if (callPromise && typeof callPromise.then === 'function') {
-            callPromise.then(resolve).catch(reject);
-          }
-        });
+      try {
+        await callPromise(args);
 
         this.log(`${direction.toUpperCase()}:   `[direction == 'up' ? 'green' : 'red'] + ` ${migration.filename} `);
 
@@ -219,21 +208,18 @@ class Migrator {
       let migrationsToImport = filesNotInDb;
       this.log('Synchronizing database with file system migrations...');
       if (!this.autosync && migrationsToImport.length) {
-        const answers = await new Promise(function (resolve) {
-          ask.prompt({
-            type: 'checkbox',
-            message: 'The following migrations exist in the migrations folder but not in the database. Select the ones you want to import into the database',
-            name: 'migrationsToImport',
-            choices: filesNotInDb
-          }, (answers) => {
-            resolve(answers);
-          });
+        const answers = await ask.prompt({
+          type: 'checkbox',
+          message: 'The following migrations exist in the migrations folder but not in the database. Select the ones you want to import into the database',
+          name: 'migrationsToImport',
+          choices: filesNotInDb
         });
 
         migrationsToImport = answers.migrationsToImport;
       }
 
-      return Promise.map(migrationsToImport, async (migrationToImport) => {
+      const result = [];
+      for (const migrationToImport of migrationsToImport) {
         const filePath = path.join(this.migrationPath, migrationToImport),
           timestampSeparatorIndex = migrationToImport.indexOf('-'),
           timestamp = migrationToImport.slice(0, timestampSeparatorIndex),
@@ -244,8 +230,9 @@ class Migrator {
           name: migrationName,
           createdAt: timestamp
         });
-        return createdMigration.toJSON();
-      });
+        result.push(createdMigration.toJSON());
+      }
+      return result;
     } catch (error) {
       this.log(`Could not synchronise migrations in the migrations folder up to the database.`.red);
       throw error;
@@ -276,15 +263,11 @@ class Migrator {
       let migrationsToDelete = dbMigrationsNotOnFs.map(m => m.name);
 
       if (!this.autosync && !!migrationsToDelete.length) {
-        const answers = await new Promise(function (resolve) {
-          ask.prompt({
-            type: 'checkbox',
-            message: 'The following migrations exist in the database but not in the migrations folder. Select the ones you want to remove from the file system.',
-            name: 'migrationsToDelete',
-            choices: migrationsToDelete
-          }, (answers) => {
-            resolve(answers);
-          });
+        const answers = await ask.prompt({
+          type: 'checkbox',
+          message: 'The following migrations exist in the database but not in the migrations folder. Select the ones you want to remove from the file system.',
+          name: 'migrationsToDelete',
+          choices: migrationsToDelete
         });
 
         migrationsToDelete = answers.migrationsToDelete;

@@ -1,13 +1,9 @@
 {
+  "private": true,
   "name": "migrate-mongoose",
   "version": "4.0.0",
   "description": "A mongoose based migration framework for node",
   "main": "./src/lib.js",
-  "scripts": {
-    "prepublish": "scripts/prepublish.sh",
-    "release": "np --no-tests",
-    "test": "echo 'Error: no test specified'"
-  },
   "bin": {
     "migrate": "./src/cli.js"
   },
@@ -26,16 +22,16 @@
     "type": "git",
     "url": "https://github.com/balmasi/migrate-mongoose.git"
   },
+  "engines": {
+    "npm": ">=8.19.2",
+    "node": ">=16.19.0"
+  },
   "dependencies": {
-    "bluebird": "^3.3.3",
     "colors": "^1.1.2",
     "dotenv": "^8.0.0",
     "inquirer": "^0.12.0",
     "mkdirp": "^1.0.4",
     "mongoose": "^5.6.3",
     "yargs": "^16.1.1"
-  },
-  "devDependencies": {
-    "np": "^7.0.0"
   }
 }

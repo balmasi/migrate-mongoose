@@ -1,8 +1,6 @@
 const mongoose =  require('mongoose');
-const Promise = require('bluebird');
 
 // Factory function for a mongoose model
-mongoose.Promise = Promise;
 const { Schema } = mongoose;
 
 function initializeDB( collection = 'migrations', dbConnection) {
