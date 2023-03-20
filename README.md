@@ -154,35 +154,33 @@ migrate-mongoose makes an independent connection to MongoDB to fetch and write m
 
 Below is an example of a typical setup in a mongoose project
 
-#### models/user.model.js
+  #### models/user.js
 ```javascript
 mongoose = require('mongoose');
 
 const { Schema } = mongoose;
+
 const UserSchema = new Schema({
-    firstName: String,
-    lastName: String,
-  });
-module.exports = mongoose.model('user', UserSchema);
+  firstName: String,
+  lastName: String,
+});
+
+const getUserModel = (connection) => {
+  return connection.model('user', UserSchema);
+};
+
+module.exports = {
+  UserSchema,
+  getUserModel,
+};
 ```
-
-
-#### models/index.js
-```javascript
-const mongoose = require('mongoose');
-const User = require('./user.model');
-
-mongoose.connect('mongodb://localhost:27017/mydb', { useNewUrlParser: true })
-
-module.exports = { User };
-```
-
 
 #### migrations/1459287720919-my-migration.js
 ```javascript
-import { User } from '../models'
+const { getUserModel } = require('../models/user');
 
 async function up() {
+  const User = getUserModel(this.connection);
   // Then you can use it in the migration like so  
   await User.create({ firstName: 'Ada', lastName: 'Lovelace' });
   
@@ -192,13 +190,14 @@ async function up() {
 }
 ```
 
-If you're using the package programmatically. You can access your models using the connection you constructed the Migrator with through the `this` context.
+If you're using the package programmatically. You can access your models using the connection constructed from Migrator with through the `this` context.
 
 ```javascript
+const { getUserModel } = require('../models/user');
+
 async function up() {
-  // "this('user')"  is the same as calling "connection.model('user')" using the connection you passed to the Migrator constructor.
-  // 
-  await this('user').create({ firstName: 'Ada', lastName: 'Lovelace' });
+  const User = getUserModel(this.connection);
+  await User.create({ firstName: 'Ada', lastName: 'Lovelace' });
 }
 ```
 
