@@ -208,11 +208,15 @@ class Migrator {
       let migrationsToImport = filesNotInDb;
       this.log('Synchronizing database with file system migrations...');
       if (!this.autosync && migrationsToImport.length) {
-        const answers = await ask.prompt({
-          type: 'checkbox',
-          message: 'The following migrations exist in the migrations folder but not in the database. Select the ones you want to import into the database',
-          name: 'migrationsToImport',
-          choices: filesNotInDb
+        const answers = await new Promise(function (resolve) {
+          ask.prompt({
+            type: 'checkbox',
+            message: 'The following migrations exist in the migrations folder but not in the database. Select the ones you want to import into the database',
+            name: 'migrationsToImport',
+            choices: filesNotInDb
+          }, (answers) => {
+            resolve(answers);
+          });
         });
 
         migrationsToImport = answers.migrationsToImport;
@@ -263,13 +267,16 @@ class Migrator {
       let migrationsToDelete = dbMigrationsNotOnFs.map(m => m.name);
 
       if (!this.autosync && !!migrationsToDelete.length) {
-        const answers = await ask.prompt({
-          type: 'checkbox',
-          message: 'The following migrations exist in the database but not in the migrations folder. Select the ones you want to remove from the file system.',
-          name: 'migrationsToDelete',
-          choices: migrationsToDelete
+        const answers = await new Promise(function (resolve) {
+          ask.prompt({
+            type: 'checkbox',
+            message: 'The following migrations exist in the database but not in the migrations folder. Select the ones you want to remove from the file system.',
+            name: 'migrationsToDelete',
+            choices: migrationsToDelete
+          }, (answers) => {
+            resolve(answers);
+          });
         });
-
         migrationsToDelete = answers.migrationsToDelete;
       }
 
