@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "migrate-mongoose",
   "version": "4.0.0",
   "description": "A mongoose based migration framework for node",
