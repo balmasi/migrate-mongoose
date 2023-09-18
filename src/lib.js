@@ -44,7 +44,7 @@ class Migrator {
     const defaultTemplate = migrationTemplate;
     this.template = templatePath ? fs.readFileSync(templatePath, 'utf-8') : defaultTemplate;
     this.migrationPath = path.resolve(migrationsPath);
-    this.connection = connection || mongoose.createConnection(dbConnectionUri, { useNewUrlParser: true });
+    this.connection = connection || mongoose.createConnection(dbConnectionUri, { useNewUrlParser: true, useUnifiedTopology: true });
     this.collection = collectionName;
     this.autosync = autosync;
     this.cli = cli;
