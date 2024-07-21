@@ -29,13 +29,13 @@
   "dependencies": {
     "bluebird": "^3.7.2",
     "colors": "^1.4.0",
-    "dotenv": "^8.0.0",
+    "dotenv": "^16.4.5",
     "inquirer": "^10.1.0",
     "mkdirp": "^3.0.1",
     "mongoose": "^8.5.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "np": "^7.0.0"
+    "np": "^10.0.7"
   }
 }
